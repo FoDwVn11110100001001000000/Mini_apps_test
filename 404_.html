@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Діалог користувачів</title>
+  <style>
+    /* Базові стилі */
+    body {
+      font-family: sans-serif;
+      background-color: #F8F9FA;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto;
+      background-color: #4682B4	;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .header h1 {
+      color: #FFFACD	;
+    }
+
+    .username {
+      font-weight: bold;
+      color: #0000FF		;
+    }
+
+    .messages-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 20px;
+    }
+
+    .messages {
+      overflow-y: auto;
+      padding: 10px;
+      border: 1px solid #CCC;
+      border-radius: 5px;
+    }
+
+    .message {
+      margin-bottom: 10px;
+      padding: 10px;
+      background-color: #F0F0F0;
+      border-radius: 5px;
+    }
+
+    .message-text {
+      margin-top: 5px;
+    }
+
+    .form {
+      display: flex;
+      align-items: center;
+    }
+
+    .input-field {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #CCC;
+      border-radius: 5px;
+      font-size: 1em;
+      
+    }
+
+    .send-button {
+      padding: 10px;
+      background-color: #1f53bc;
+      color: #FFF;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .send-button:hover {
+      background-color: #226AA3;
+    }
+
+    /* Адаптивні стилі */
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+        padding: 10px;
+      }
+
+      .messages-container {
+        flex-direction: row;
+        align-items: flex-start;
+      }
+
+      .messages {
+        width: 50%;
+        margin-right: 10px;
+      }
+
+      .input-field {
+        font-size: 0.9em;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Діалог користувачів</h1>
+    </div>
+
+    <div class="messages-container">
+      <div class="messages" id="messages">
+      </div>
+      <div class="username">Артем Кукунін</div>
+    </div>
+
+    <form class="form">
+      <input type="text" class="input-field" id="message" placeholder="Введіть повідомлення">
+      <button class="send-button" onclick="sendMessage()">Відправити</button>
+    </form>
+
+    <script>
+      // Змінна для зберігання повідомлень в localStorage
+      const localStorageKey = 'messages';
+
+      // Функція для отримання повідомлень з localStorage
+      function getMessages() {
+        const messagesString = localStorage.getItem(localStorageKey);
+        if (messagesString) {
+          const messagesJSON = JSON.parse(messagesString);
+          return messagesJSON;
+        } else {
+          return [];
+        }
+      }
+
+      // Функція для збереження повідомлень в localStorage
+      function saveMessages(messages) {
+        const messagesJSON = JSON.stringify(messages);
+        localStorage.setItem(localStorageKey, messagesJSON);
+      }
+
+      // Функція для додавання нового повідомлення
+      function appendMessage(message) {
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('message');
+
+        const usernameElement = document.createElement('div');
+        usernameElement.classList.add('username');
+        usernameElement.textContent = message.username + ':';
+
+        const messageTextElement = document.createElement('div');
+        messageTextElement.classList.add('message-text');
+        messageTextElement.textContent = message.text;
+
+        messageElement.appendChild(usernameElement);
+        messageElement.appendChild(messageTextElement);
+
+        const messagesContainer = document.getElementById('messages');
+        messagesContainer.appendChild(messageElement);
+
+        // Прокрутити до кінця контейнера з повідомленнями
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }
+
+      // Функція для надсилання повідомлення
+      function sendMessage() {
+        const messageInput = document.getElementById('message');
+        const messageText = messageInput.value.trim();
+
+        if (messageText) {
+          // Створюємо об'єкт повідомлення
+          const message = {
+            username: 'Артем Кукунін', // Вставте своє ім'я
+            text: messageText
+          };
+
+          // Додаємо повідомлення до масиву
+          const messages = getMessages();
+          messages.push(message);
+
+          // Оновлюємо localStorage
+          saveMessages(messages);
+
+          // Додаємо повідомлення в інтерфейс користувача
+          appendMessage(message);
+
+          // Очищаємо поле вводу
+          messageInput.value = '';
+
+          // Перевіряємо, чи є відповіді бота
+          checkBotResponse();
+        }
+      }
+
+      // Функція для перевірки наявності відповіді бота
+      function checkBotResponse() {
+        // ... (Тут буде реалізована логіка перевірки та додавання відповіді бота)
+      }
+
+      // Завантаження та відображення початкових повідомлень
+      const initialMessages = getMessages();
+      for (const message of initialMessages) {
+        appendMessage(message);
+      }
+    </script>
+  </div>
+</body>
+</html>
+
