@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Чат</title>
+  <style>
+    /* Загальні стилі */
+    body {
+      background-color: #C0C0C0;
+      font-family: sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Контейнер чату */
+    .chat-container {
+      width: 100%;
+      background-color: #FFFFFF;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      height: 100vh; /* Займає весь доступний висоту вікна */
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Заголовок чату */
+    .chat-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between; /* Рівномірний розподіл між елементами */
+      padding: 15px;
+      background-color: #3CB371;
+      border-radius: 10px 10px 0 0;
+    }
+
+    .chat-header h2 {
+      margin: 0;
+      color: #FFFFFF;
+      font-size: 18px;
+    }
+
+    /* Перемикання мови */
+    .language-selector {
+      display: flex;
+      align-items: center;
+    }
+
+    .language-selector select {
+      background-color: #FFFFFF;
+      border: 1px solid #CCCCCC;
+      padding: 5px;
+      margin-right: 10px;
+    }
+
+    /* Вкладки чату */
+    .chat-tabs {
+      display: flex;
+      overflow-x: auto;
+      background-color: #FFFFFF;
+      border-radius: 0 0 10px 10px;
+    }
+
+    .chat-tab {
+      position: relative; /* Додано позиціонування */
+      padding: 15px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .chat-tab.active {
+      background-color: #F0F0F0;
+    }
+
+    .close-button {
+      position: absolute; /* Позиціонування кнопки закриття */
+      top: 5px;
+      right: 5px;
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+
+    /* Область повідомлень */
+    .chat-messages {
+      padding: 15px;
+      height: calc(100% - 150px); /* Займає залишок висоти вікна після врахування заголовка і форми вводу */
+      overflow-y: scroll;
+    }
+
+    /* Вхідне повідомлення */
+    .incoming-message {
+      display: flex;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+
+    .incoming-message .message-bubble {
+      background-color: #4CAF50;
+      color: #FFFFFF;
+      padding: 10px;
+      border-radius: 5px;
+      max-width: 80%;
+      margin-right: 10px;
+    }
+
+    /* Вихідне повідомлення */
+    .outgoing-message {
+      display: flex;
+      align-items: flex-end;
+      margin-bottom: 10px;
+    }
+
+    .outgoing-message .message-bubble {
+      background-color: #008CBA;
+      color: #FFFFFF;
+      padding: 10px;
+      border-radius: 5px;
+      max-width: 80%;
+      margin-left: 10px;
+    }
+
+    /* Форма відправлення повідомлення */
+    .chat-input {
+      display: flex;
+      align-items: center;
+      padding: 15px;
+      background-color: #FFFFFF;
+      border-radius: 0 0 10px 10px;
+    }
+
+    .chat-input input[type="text"] {
+      flex-grow: 1;
+      padding: 10px;
+      border: 1px solid #CCCCCC;
+      border-radius: 5px;
+    }
+
+    .chat-input button {
+      background-color: #4CAF50;
+      color: #FFFFFF;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .message-bubble {
+      background-color: #008CBA;
+      color: #FFFFFF;
+      padding: 10px;
+      border-radius: 5px;
+      max-width: 80%;
+      margin-left: 10px;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <div class="chat-header">
+      <h2 id="chat-title">Чат</h2>
+      <button id="add-tab-button">+</button>
+      <div class="language-selector">
+        <select id="language-select">
+          <option value="uk">Українська</option>
+          <option value="ru">Російська</option>
+          <option value="en">English</option>
+          <option value="de">Deutsch</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="chat-tabs">
+      <!-- Пустий список вкладок -->
+    </div>
+
+    <div class="chat-messages">
+      <!-- Пустий список повідомлень -->
+    </div>
+
+    <div class="chat-input">
+      <input type="text" placeholder="Введіть повідомлення..." id="message-input">
+      <button id="send-button">Відправити</button>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const chatTabs = document.querySelector('.chat-tabs');
+      const chatMessages = document.querySelector('.chat-messages');
+      const messageInput = document.querySelector('.chat-input input[type="text"]');
+      const languageSelect = document.getElementById('language-select');
+      const addButton = document.getElementById('add-tab-button');
+      const sendButton = document.getElementById('send-button');
+      let selectedLanguage = localStorage.getItem('selectedLanguage') || 'uk';
+
+      function changeLanguage() {
+        selectedLanguage = languageSelect.value;
+        localStorage.setItem('selectedLanguage', selectedLanguage);
+        // Перекладемо заголовок чату
+        const chatTitle = document.getElementById('chat-title');
+        switch (selectedLanguage) {
+          case 'uk':
+            chatTitle.textContent = 'Чат';
+            messageInput.placeholder = 'Введіть повідомлення...';
+            sendButton.textContent = 'Відправити';
+            break;
+          case 'ru':
+            chatTitle.textContent = 'Чат';
+            messageInput.placeholder = 'Введите сообщение...';
+            sendButton.textContent = 'Отправить';
+            break;
+          case 'en':
+            chatTitle.textContent = 'Chat';
+            messageInput.placeholder = 'Type a message...';
+            sendButton.textContent = 'Send';
+            break;
+          case 'de':
+            chatTitle.textContent = 'Chat';
+            messageInput.placeholder = 'Nachricht eingeben...';
+            sendButton.textContent = 'Senden';
+            break;
+          default:
+            chatTitle.textContent = 'Чат';
+            messageInput.placeholder = 'Введіть повідомлення...';
+            sendButton.textContent = 'Відправити';
+            break;
+        }
+
+        // Оновлюємо назви всіх вкладок
+        const chatTabList = document.querySelectorAll('.chat-tab');
+        chatTabList.forEach(tab => {
+          const tabId = tab.getAttribute('data-tab-id');
+          const tabLanguage = tabId.split('-')[0];
+          const tabUserId = tabId.split('-')[1];
+          const tabName = getTranslatedTabName(selectedLanguage, tabId);
+          tab.querySelector('.user-name').textContent = tabName;
+        });
+      }
+
+      function createTab() {
+        const tabId = `${selectedLanguage}-${chatTabs.children.length + 1}`;
+        const tabName = getTranslatedTabName(selectedLanguage, tabId);
+        const tab = createTabElement(tabId, tabName);
+        chatTabs.appendChild(tab);
+        addTabEventListeners(tab);
+        createMessagesContainer(tabId);
+      }
+
+      function getTranslatedTabName(language, tabId) {
+        switch (language) {
+          case 'uk':
+            return `Користувач ${tabId.split('-')[1]}`;
+          case 'ru':
+            return `Пользователь ${tabId.split('-')[1]}`;
+          case 'en':
+            return `User ${tabId.split('-')[1]}`;
+          case 'de':
+            return `Benutzer ${tabId.split('-')[1]}`;
+          default:
+            return `Користувач ${tabId.split('-')[1]}`;
+        }
+      }
+
+      function createTabElement(tabId, tabName) {
+        const tab = document.createElement('div');
+        tab.classList.add('chat-tab');
+        tab.setAttribute('data-tab-id', tabId);
+        tab.innerHTML = `<span class="user-name">${tabName}</span>`;
+        
+        // Додаємо кнопку закриття вкладки
+        const closeButton = document.createElement('button');
+        closeButton.classList.add('close-button');
+        closeButton.textContent = '×';
+        tab.appendChild(closeButton);
+        
+        return tab;
+      }
+
+      function addTabEventListeners(tab) {
+        const closeButton = tab.querySelector('.close-button');
+        // Додаємо подію для закриття вкладки при кліку на кнопку закриття
+        closeButton.addEventListener('click', function(event) {
+          event.stopPropagation(); // Зупиняємо подію вспливання, щоб не викликати вкладку при кліку на кнопку закриття
+          closeTab(tab);
+        });
+
+        // Перемикаємо на вкладку при кліку на неї
+        tab.addEventListener('click', function() {
+          switchTab(tab);
+        });
+      }
+
+      function createMessagesContainer(tabId) {
+        const messages = document.createElement('div');
+        messages.classList.add('chat-messages');
+        messages.setAttribute('data-tab-id', tabId);
+        chatMessages.appendChild(messages);
+
+        // Перевіряємо, чи є збережені повідомлення для цієї вкладки та відображаємо їх
+        const savedMessages = JSON.parse(localStorage.getItem(tabId)) || [];
+        savedMessages.forEach(message => {
+          appendMessage(tabId, message);
+        });
+      }
+
+      function appendMessage(tabId, message) {
+        const messageContainer = document.querySelector(`.chat-messages[data-tab-id="${tabId}"]`);
+        const messageElement = document.createElement('div');
+        messageElement.classList.add(message.type === 'incoming' ? 'incoming-message' : 'outgoing-message');
+        messageElement.innerHTML = `<div class="message-bubble">${message.text}</div>`;
+        messageContainer.appendChild(messageElement);
+      }
+
+      function switchTab(tab) {
+        const activeTab = document.querySelector('.chat-tab.active');
+        if (activeTab) {
+          activeTab.classList.remove('active');
+        }
+        tab.classList.add('active');
+      }
+
+      function closeTab(tab) {
+        tab.parentNode.removeChild(tab);
+        const activeTab = document.querySelector('.chat-tab.active');
+        if (!activeTab) {
+          const firstTab = document.querySelector('.chat-tab');
+          if (firstTab) {
+            firstTab.classList.add('active');
+          }
+        }
+      }
+
+      function sendMessage(tabId, message) {
+        // Отримуємо або створюємо масив для збереження повідомлень для цієї вкладки
+        const savedMessages = JSON.parse(localStorage.getItem(tabId)) || [];
+        savedMessages.push(message);
+        localStorage.setItem(tabId, JSON.stringify(savedMessages));
+
+        // Додаємо повідомлення до відповідної вкладки
+        appendMessage(tabId, message);
+      }
+
+      function receiveMessage(messageText) {
+        const activeTab = document.querySelector('.chat-tab.active');
+        const tabId = activeTab ? activeTab.getAttribute('data-tab-id') : null;
+        if (messageText !== '') {
+          const message = {
+            type: 'incoming', // Тип повідомлення (вхідне або вихідне)
+            text: messageText // Текст повідомлення
+          };
+          sendMessage(tabId, message);
+        }
+      }
+
+      sendButton.addEventListener('click', function() {
+        const messageText = messageInput.value.trim();
+        receiveMessage(messageText);
+        messageInput.value = ''; // Очищуємо поле вводу
+      });
+
+      messageInput.addEventListener('keypress', function(event) {
+        if (event.key === 'Enter') {
+          const messageText = messageInput.value.trim();
+          receiveMessage(messageText);
+          messageInput.value = ''; // Очищуємо поле вводу
+        }
+      });
+
+      languageSelect.addEventListener('change', function() {
+        changeLanguage(); // Виклик функції зміни мови
+      });
+
+      addButton.addEventListener('click', createTab);
+
+      if (selectedLanguage) {
+        languageSelect.value = selectedLanguage;
+        changeLanguage(); // Виклик функції зміни мови при завантаженні сторінки
+      }
+    });
+  </script>
+</body>
+</html>
